@@ -48,8 +48,9 @@ http.createServer(function(request, response) {
         //console.log("normalize = " + path.normalize(requestUrl.pathname))
         //console.log("pathname = " + requestUrl.pathname)
 
-        if (requestUrl.pathname == "/latest") {
+        if (requestUrl.pathname == "/latest" || requestUrl.pathname == "/latest.jpg" ) {
             fsPath = getLatest()
+            response.setHeader('Content-Type', 'image/jpeg');
             console.log("LATEST")
         }
 
