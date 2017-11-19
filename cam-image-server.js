@@ -73,7 +73,8 @@ http.createServer(function(request, response) {
 
         var index = getIndex(requestUrl.pathname);
         //if (requestUrl.pathname == "/latest" || requestUrl.pathname == "/latest.jpg") {
-        if (requestUrl.pathname.startsWith( "/latest" ) ) {
+        //if (requestUrl.pathname.startsWith( "/latest" ) ) { // nodejs on RaspPi does not have startsWith
+        if (requestUrl.pathname.substring(0, "/latest".length ) === "/latest" ) {
             fsPath = getLatest(index);
             response.setHeader('Content-Type', 'image/jpeg');
             console.log("LATEST");
