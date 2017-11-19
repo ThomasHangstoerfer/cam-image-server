@@ -4,7 +4,7 @@ var fs = require('fs')
 var path = require('path')
 var baseDirectory = __dirname // or whatever base directory you want
 
-var cam_image_path = '/qnap/Download'
+var cam_image_path = '/qnap/Download/today'
 var port = 9615
 
 
@@ -21,6 +21,7 @@ function getLatest() {
 
     filelist.forEach(function(file, i) {
         //console.log('File: %d: %s', i, file);
+	//console.log('indexOf = ' + file.indexOf('cam-201') );
         if (file.indexOf('cam-201') != 0) {
             filelist.splice(i, 1)
             //console.log('splice ' + i + ' - ' + file )
