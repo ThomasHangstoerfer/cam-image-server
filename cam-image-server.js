@@ -1,4 +1,3 @@
-
 // cam-image-server.js
 //
 // Usage:
@@ -17,6 +16,7 @@ var http = require('http')
 var url = require('url')
 var fs = require('fs')
 var path = require('path')
+var Jimp = require("jimp");
 var baseDirectory = __dirname // or whatever base directory you want
 
 var cam_image_path = '/qnap/Download/today'
@@ -59,6 +59,13 @@ function getLatest(index) {
     return cam_image_path + "/" + filelist[fileListIndex];
 }
 
+function getFileTimestampString(filename) {
+    var d = fs.statSync(filename).mtime;
+    console.log('mtime: ' + d.getMonth());
+    return d.getFullYear() + '-' +
+        ("0" + (d.getMonth() + 1)).slice(-2) + '-' + ("0" + d.getDate()).slice(-2) + ' ' +
+        ("0" + d.getHours()).slice(-2) + ':' + ("0" + d.getMinutes()).slice(-2);
+}
 
 http.createServer(function(request, response) {
     try {
@@ -74,23 +81,44 @@ http.createServer(function(request, response) {
         var index = getIndex(requestUrl.pathname);
         //if (requestUrl.pathname == "/latest" || requestUrl.pathname == "/latest.jpg") {
         //if (requestUrl.pathname.startsWith( "/latest" ) ) { // nodejs on RaspPi does not have startsWith
-        if (requestUrl.pathname.substring(0, "/latest".length ) === "/latest" ) {
+        if (requestUrl.pathname.substring(0, "/latest".length) === "/latest") {
             fsPath = getLatest(index);
-            response.setHeader('Content-Type', 'image/jpeg');
-            console.log("LATEST");
-        }
 
-        var fileStream = fs.createReadStream(fsPath);
-        fileStream.pipe(response);
-        fileStream.on('open', function() {
-            response.writeHead(200);
-        })
-        fileStream.on('error', function(e) {
-            response.writeHead(404); // assume the file doesn't exist
-            response.end();
-        })
+            var tsString = getFileTimestampString(fsPath);
+
+            response.setHeader('Content-Type', 'image/jpeg');
+            console.log("LATEST " + tsString);
+
+            Jimp.read(fsPath, function(err, image) {
+                if (err) throw err;
+                Jimp.loadFont(Jimp.FONT_SANS_32_WHITE).then(function(font) {
+                    //image.print(font, image.bitmap.width * 0.6, image.bitmap.width * 0.7, tsString).write("/tmp/test.jpg");
+                    image.print(font, image.bitmap.width * 0.6, image.bitmap.width * 0.7, tsString);
+
+                    image.getBuffer(Jimp.AUTO, function(err, buffer) {
+                        //console.log('HIER', buffer);
+                        response.writeHead(200);
+                        response.write(buffer);
+                        response.end();
+                    });
+
+                });
+            });
+        } else {
+
+            var fileStream = fs.createReadStream(fsPath);
+            fileStream.pipe(response);
+            fileStream.on('open', function() {
+                response.writeHead(200);
+            })
+            fileStream.on('error', function(e) {
+                response.writeHead(404); // assume the file doesn't exist
+                response.end();
+            })
+        }
     } catch (e) {
         response.writeHead(500);
+        response.write(e.stack);
         response.end(); // end the response so browsers don't hang
         console.log(e.stack);
     }
