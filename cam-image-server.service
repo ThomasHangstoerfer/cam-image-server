@@ -1,0 +1,10 @@
+[Unit]
+Description=cam-image-server
+After=remote-fs.target
+
+[Service]
+#Type=notify
+ExecStart=/usr/local/bin/nodejs /opt/cam-image-server/cam-image-server.js
+
+[Install]
+WantedBy=multi-user.target
