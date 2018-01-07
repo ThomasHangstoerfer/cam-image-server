@@ -10,17 +10,59 @@
 // Or, with a given index, to previous images:
 // http://server:9615/latest-1.jpg -> image before the latest
 // http://server:9615/latest-2.jpg -> 2 images before the latest
+//
+// The image folder where new images from the cam are stored is watched
+// for new files.
+// If a file is added, a mqtt-message with the new filename is published under the topic 'cam/newImage'.
+//
+//
+// Requirements:
+// npm install
 
+// mosquitto_sub -h localhost -v -t test
+// mosquitto_pub -h localhost -t test -m "Hello world, Mosquitto"
 
-var http = require('http')
-var url = require('url')
-var fs = require('fs')
-var path = require('path')
+var http = require('http');
+var url = require('url');
+var hound = require('hound');
+var fs = require('fs');
+var path = require('path');
 var Jimp = require("jimp");
-var baseDirectory = __dirname // or whatever base directory you want
+
+const mqtt = require('mqtt');
+
+var baseDirectory = __dirname; // or whatever base directory you want
 
 var cam_image_path = '/qnap/Download/today'
-var port = 9615
+var http_server_port = 9615
+
+var mqtt_broker = 'mqtt://pi'
+const mqtt_client = mqtt.connect(mqtt_broker)
+
+mqtt_client.on('connect', () => {
+    mqtt_client.subscribe('cam/newImage')
+})
+
+mqtt_client.on('error', (err) => {
+    console.log('mqtt: Could not connect to ' + mqtt_broker + ': ' + err);
+})
+
+mqtt_client.on('message', (topic, message) => {
+    if(topic === 'cam/newImage') {
+        console.log('cam/newImage: ' + message.toString());
+    }
+})
+
+
+// watch for new images and publish their filenames to mqtt-topic 'cam/newImage'
+watcher = hound.watch(cam_image_path)
+watcher.on('create', function(file, stats) {
+    console.log(file + ' was created')
+    if ( mqtt_client.connected === true ) {
+        console.log('mqtt: publish ' + file + ' to topic ' + 'cam/newImage')
+        mqtt_client.publish('cam/newImage', file);
+    }
+})
 
 
 function getLatest(index) {
@@ -122,7 +164,7 @@ http.createServer(function(request, response) {
         response.end(); // end the response so browsers don't hang
         console.log(e.stack);
     }
-}).listen(port);
+}).listen(http_server_port);
 
 function getIndex(pathname) {
     var index = 0;
@@ -142,7 +184,7 @@ function getIndex(pathname) {
 
 //getLatest();
 //getLatest(3);
-console.log("listening on port " + port);
+console.log("listening on port " + http_server_port);
 
 //getIndex("/latest");
 //getIndex("/latest.jpg");

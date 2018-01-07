@@ -1,7 +1,7 @@
 {
-  "name": "jimp",
-  "version": "0.2.28",
-  "description": "An image processing library written entirely in JavaScript (i.e. zero external or native dependencies).",
+  "name": "cam-image-server",
+  "version": "0.1.1",
+  "description": "Provides access to the latest image of the surveillance camera",
   "main": "cam-image-server.js",
   "keywords": [
     "jpg",
@@ -10,7 +10,9 @@
   "author": "Thomas Hangstörfer <thomas@bitcoder.de>",
   "license": "MIT",
   "dependencies": {
-    "jimp": "^0.2.28"
+    "hound": "^1.0.5",
+    "jimp": "^0.2.28",
+    "mqtt": "^2.15.0"
   },
   "devDependencies": {
     "babel": "^6.0.14"
