@@ -131,22 +131,23 @@ http.createServer(function(request, response) {
             response.setHeader('Content-Type', 'image/jpeg');
             console.log("LATEST " + tsString);
 
-            Jimp.read(fsPath, function(err, image) {
-                if (err) throw err;
-                Jimp.loadFont(Jimp.FONT_SANS_32_WHITE).then(function(font) {
-                    //image.print(font, image.bitmap.width * 0.6, image.bitmap.width * 0.7, tsString).write("/tmp/test.jpg");
-                    image.print(font, image.bitmap.width * 0.6, image.bitmap.width * 0.7, tsString);
-
-                    image.getBuffer(Jimp.AUTO, function(err, buffer) {
-                        //console.log('HIER', buffer);
-                        response.writeHead(200);
-                        response.write(buffer);
-                        response.end();
-                    });
-
-                });
-            });
-        } else {
+        }
+//            Jimp.read(fsPath, function(err, image) {
+//                if (err) throw err;
+//                Jimp.loadFont(Jimp.FONT_SANS_32_WHITE).then(function(font) {
+//                    //image.print(font, image.bitmap.width * 0.6, image.bitmap.width * 0.7, tsString).write("/tmp/test.jpg");
+//                    image.print(font, image.bitmap.width * 0.6, image.bitmap.width * 0.7, tsString);
+//
+//                    image.getBuffer(Jimp.AUTO, function(err, buffer) {
+//                        //console.log('HIER', buffer);
+//                        response.writeHead(200);
+//                        response.write(buffer);
+//                        response.end();
+//                    });
+//
+//                });
+//            });
+//        } else {
 
             var fileStream = fs.createReadStream(fsPath);
             fileStream.pipe(response);
@@ -157,7 +158,7 @@ http.createServer(function(request, response) {
                 response.writeHead(404); // assume the file doesn't exist
                 response.end();
             })
-        }
+//        }
     } catch (e) {
         response.writeHead(500);
         response.write(e.stack);
