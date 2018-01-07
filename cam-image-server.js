@@ -19,8 +19,8 @@
 // Requirements:
 // npm install
 
-// mosquitto_sub -h localhost -v -t test
-// mosquitto_pub -h localhost -t test -m "Hello world, Mosquitto"
+// mosquitto_sub -h localhost -v -t "cam/newImage"
+// mosquitto_pub -h localhost -t "cam/newImage" -m "Hello world, Mosquitto"
 
 var http = require('http');
 var url = require('url');
@@ -40,7 +40,8 @@ var mqtt_broker = 'mqtt://pi'
 const mqtt_client = mqtt.connect(mqtt_broker)
 
 mqtt_client.on('connect', () => {
-    mqtt_client.subscribe('cam/newImage')
+    console.log('mqtt: Connected to mqtt-broker ' + mqtt_broker);
+    //mqtt_client.subscribe('cam/newImage')
 })
 
 mqtt_client.on('error', (err) => {
