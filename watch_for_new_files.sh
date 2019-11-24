@@ -60,7 +60,7 @@ elif [[ "$MODE" == "L" ]]; then
 		FILE=`netcat -p $PORT -l`
 		echo "Received new filename: $FILE"
 		echo "Publish to cam/newImage"
-		mosquitto_pub -h ${MQTT_BROKER} -t "cam/newImage" -m "$FILE"
+		mosquitto_pub -h ${MQTT_BROKER} -t "cam/newImage" -m "$FILE" -r
 	done
 else
 	echo "$0: Error invalid mode '$MODE'"
