@@ -1,10 +1,12 @@
 [Unit]
 Description=cam-image-server
-After=remote-fs.target
+Requires=remote-fs.target 
+After=remote-fs.target 
 
 [Service]
 #Type=notify
-ExecStart=/usr/local/bin/nodejs /opt/cam-image-server/cam-image-server.js
+ExecStartPre=/bin/sleep 30 ; /bin/systemctl start qnap-Download.mount ; /bin/systemctl start qnap-BTSync.mount ; /bin/systemctl start qnap-share.mount
+ExecStart=/usr/bin/node /opt/cam-image-server/cam-image-server.js
 
 [Install]
 WantedBy=multi-user.target
