@@ -36,7 +36,7 @@ var baseDirectory = __dirname; // or whatever base directory you want
 var cam_image_path = '/qnap/Download/today'
 var http_server_port = 9615
 
-var mqtt_broker = 'mqtt://pi'
+var mqtt_broker = 'mqtt://apollo'
 const mqtt_client = mqtt.connect(mqtt_broker)
 
 mqtt_client.on('connect', () => {

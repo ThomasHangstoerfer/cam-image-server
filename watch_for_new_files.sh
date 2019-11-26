@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# qnap: ./watch_for_new_files.sh -w -p 6666 -h pi -d /share/Download/today
-# pi  : ./watch_for_new_files.sh -l -p 6666 -m pi
+# qnap    : ./watch_for_new_files.sh -w -p 6666 -h apollo -d /share/Download/today
+# apollo  : ./watch_for_new_files.sh -l -p 6666 -m apollo
 
 
 MODE=""
@@ -50,9 +50,14 @@ fi
 if [[ "$MODE" == "W" ]]; then
 	echo "Watching for new files in $FOLDER and sending their filenames to ${HOST}:${PORT}"
 	while true ; do
-		FILE=`inotifywait -e create /share/HDA_DATA/Download/today --format "%f"`
-		echo "new file detected: $FILE"
-		echo $FILE | nc -q 0 $HOST $PORT
+#		FILE=`inotifywait -e create /share/HDA_DATA/Download/today --format "%f"`
+#		echo "new file detected: $FILE"
+#		echo $FILE | nc -q 0 $HOST $PORT
+		FILE=`inotifywait -e create /share/HDA_DATA/Download/today --format "%f" `
+		echo $FILE  > /tmp/image_watcher
+		echo "new file detected: " `cat /tmp/image_watcher`
+		/opt/bin/nc -q 0 $HOST $PORT < /tmp/image_watcher 2>&1 >> /var/log/autorun.log
+		echo RESULT $?
 	done
 elif [[ "$MODE" == "L" ]]; then
 	echo "Listening for incomming filenames on port $PORT and forwarding them to mqtt-broker ${MQTT_BROKER}"
