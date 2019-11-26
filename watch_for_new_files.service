@@ -1,0 +1,11 @@
+[Unit]
+Description=watch_for_new_files
+Requires=remote-fs.target 
+After=remote-fs.target 
+
+[Service]
+#Type=notify
+ExecStart=/opt/cam-image-server/watch_for_new_files.sh -l -p 6666 -m apollo
+
+[Install]
+WantedBy=multi-user.target
