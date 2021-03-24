@@ -130,6 +130,7 @@ http.createServer(function(request, response) {
             var tsString = getFileTimestampString(fsPath);
 
             response.setHeader('Content-Type', 'image/jpeg');
+            response.setHeader('cache-control', 'max-age=0'); // dont cache it on client-side
             console.log("LATEST " + tsString);
 
         }
