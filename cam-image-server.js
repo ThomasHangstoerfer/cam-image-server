@@ -49,7 +49,7 @@ mqtt_client.on('error', (err) => {
 })
 
 mqtt_client.on('message', (topic, message) => {
-    if(topic === 'cam/newImage') {
+    if (topic === 'cam/newImage') {
         console.log('cam/newImage: ' + message.toString());
     }
 })
@@ -57,9 +57,9 @@ mqtt_client.on('message', (topic, message) => {
 
 // watch for new images and publish their filenames to mqtt-topic 'cam/newImage'
 watcher = hound.watch(cam_image_path)
-watcher.on('create', function(file, stats) {
+watcher.on('create', function (file, stats) {
     console.log(file + ' was created')
-    if ( mqtt_client.connected === true ) {
+    if (mqtt_client.connected === true) {
         console.log('mqtt: publish ' + file + ' to topic ' + 'cam/newImage')
         mqtt_client.publish('cam/newImage', file);
     }
@@ -67,7 +67,8 @@ watcher.on('create', function(file, stats) {
 
 
 function getLatest(index) {
-    fs.realpath(cam_image_path, function(err, path) {
+    console.log("getLatest(" + index + ")");
+    fs.realpath(cam_image_path, function (err, path) {
         if (err) {
             console.log(err);
             return "";
@@ -83,7 +84,7 @@ function getLatest(index) {
 
     var filelist = fs.readdirSync(cam_image_path);
 
-    filelist.forEach(function(file, i) {
+    filelist.forEach(function (file, i) {
         //console.log('File: %d: %s', i, file);
         //console.log('indexOf = ' + file.indexOf('cam-201') );
         if (file.indexOf('cam-201') != 0) {
@@ -91,7 +92,7 @@ function getLatest(index) {
             //console.log('splice ' + i + ' - ' + file )
         }
     });
-    filelist.sort(function(a, b) {
+    filelist.sort(function (a, b) {
         return a == b ? 0 : +(a > b) || -1;
     });
     //filelist.forEach(file => {
@@ -110,9 +111,10 @@ function getFileTimestampString(filename) {
         ("0" + d.getHours()).slice(-2) + ':' + ("0" + d.getMinutes()).slice(-2);
 }
 
-http.createServer(function(request, response) {
+http.createServer(function (request, response) {
     try {
         var requestUrl = url.parse(request.url);
+        console.log("http-request: ", requestUrl);
 
         // need to use path.normalize so people can't access directories underneath baseDirectory
         var fsPath = baseDirectory + path.normalize(requestUrl.pathname);
@@ -133,34 +135,96 @@ http.createServer(function(request, response) {
             response.setHeader('cache-control', 'max-age=0'); // dont cache it on client-side
             console.log("LATEST " + tsString);
 
-        }
-//            Jimp.read(fsPath, function(err, image) {
-//                if (err) throw err;
-//                Jimp.loadFont(Jimp.FONT_SANS_32_WHITE).then(function(font) {
-//                    //image.print(font, image.bitmap.width * 0.6, image.bitmap.width * 0.7, tsString).write("/tmp/test.jpg");
-//                    image.print(font, image.bitmap.width * 0.6, image.bitmap.width * 0.7, tsString);
-//
-//                    image.getBuffer(Jimp.AUTO, function(err, buffer) {
-//                        //console.log('HIER', buffer);
-//                        response.writeHead(200);
-//                        response.write(buffer);
-//                        response.end();
-//                    });
-//
-//                });
-//            });
-//        } else {
+            //            Jimp.read(fsPath, function(err, image) {
+            //                if (err) throw err;
+            //                Jimp.loadFont(Jimp.FONT_SANS_32_WHITE).then(function(font) {
+            //                    //image.print(font, image.bitmap.width * 0.6, image.bitmap.width * 0.7, tsString).write("/tmp/test.jpg");
+            //                    image.print(font, image.bitmap.width * 0.6, image.bitmap.width * 0.7, tsString);
+            //
+            //                    image.getBuffer(Jimp.AUTO, function(err, buffer) {
+            //                        //console.log('HIER', buffer);
+            //                        response.writeHead(200);
+            //                        response.write(buffer);
+            //                        response.end();
+            //                    });
+            //
+            //                });
+            //            });
+            //        } else {
 
             var fileStream = fs.createReadStream(fsPath);
             fileStream.pipe(response);
-            fileStream.on('open', function() {
+            fileStream.on('open', function () {
                 response.writeHead(200);
             })
-            fileStream.on('error', function(e) {
+            fileStream.on('error', function (e) {
                 response.writeHead(404); // assume the file doesn't exist
                 response.end();
             })
-//        }
+
+        } else if (requestUrl.pathname === "/") {
+            // return html with thumbnails of all images in 'today' folder
+            console.log("/all");
+            response.writeHead(200);
+
+            var filelist = fs.readdirSync(cam_image_path);
+
+            filelist.forEach(function (file, i) {
+                //console.log('File: %d: %s', i, file);
+                //console.log('indexOf = ' + file.indexOf('cam-201') );
+                if (file.indexOf('cam-201') != 0) {
+                    filelist.splice(i, 1);
+                    //console.log('splice ' + i + ' - ' + file )
+                }
+            });
+            filelist.sort(function (a, b) {
+                return a == b ? 0 : +(a > b) || -1;
+            });
+            response.write('<html><head><title>Cam Images</title></head><body>');
+
+            response.write('<style>');
+            response.write('.wrapper { ');
+            response.write('    display: grid; ');
+            response.write('    grid-column-gap: 25px; grid-row-gap: 25px;');
+            response.write('}');
+            response.write('@media screen  { .wrapper { grid-template-columns: repeat(3, 1fr); } } ');
+            response.write('@media screen and (max-width: 800px) { .wrapper { grid-template-columns: repeat(2, 1fr); } } ');
+            response.write('@media screen and (max-width: 600px) { .wrapper { grid-template-columns: repeat(1, 1fr); } } ');
+            response.write('.wrapper > div a img { max-width: 100%; }');
+            response.write('</style>');
+
+            response.write('<div class="row">');
+            response.write('<div class="wrapper">');
+            filelist.forEach(file => {
+                response.write('<div>');
+                response.write('   <a href="' + file + '">');
+                response.write('      <img src="' + file + '" />');
+                response.write('   </a>');
+                response.write('</div>');
+            });
+            response.write('</div>');
+            response.write('</div>');
+            response.write('</body></html>');
+
+            response.end();
+        } else {
+            console.log('request file');
+
+            //console.log('fsPath = ' + fsPath );
+            //console.log('cam_image_path = ' + cam_image_path);
+            //console.log('requestUrl.pathname = ' + requestUrl.pathname );
+            fsPath = cam_image_path + requestUrl.pathname;
+
+            var fileStream = fs.createReadStream(fsPath);
+            fileStream.pipe(response);
+            fileStream.on('open', function () {
+                response.writeHead(200);
+            });
+            fileStream.on('error', function (e) {
+                response.writeHead(404); // assume the file doesn't exist
+                response.end();
+            });
+        }
     } catch (e) {
         response.writeHead(500);
         response.write(e.stack);
