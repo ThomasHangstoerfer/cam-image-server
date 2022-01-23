@@ -81,13 +81,14 @@ function getLatest(index) {
         index = 0;
     }
     console.log('index: ' + index);
+    //console.log('cam_image_path: ' + cam_image_path);
 
     var filelist = fs.readdirSync(cam_image_path);
 
     filelist.forEach(function (file, i) {
         //console.log('File: %d: %s', i, file);
-        //console.log('indexOf = ' + file.indexOf('cam-201') );
-        if (file.indexOf('cam-201') != 0) {
+        //console.log('indexOf = ' + file.indexOf('cam-20') );
+        if (file.indexOf('cam-20') != 0) {
             filelist.splice(i, 1);
             //console.log('splice ' + i + ' - ' + file )
         }
@@ -171,8 +172,8 @@ http.createServer(function (request, response) {
 
             filelist.forEach(function (file, i) {
                 //console.log('File: %d: %s', i, file);
-                //console.log('indexOf = ' + file.indexOf('cam-201') );
-                if (file.indexOf('cam-201') != 0) {
+                //console.log('indexOf = ' + file.indexOf('cam-20') );
+                if (file.indexOf('cam-20') != 0) {
                     filelist.splice(i, 1);
                     //console.log('splice ' + i + ' - ' + file )
                 }
@@ -258,3 +259,4 @@ console.log("listening on port " + http_server_port);
 //getIndex("/latest-1.jpg");
 //getIndex("/latest-11.jpg");
 //getIndex("/latest-111.jpg");
+
