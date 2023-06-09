@@ -34,9 +34,10 @@ const mqtt = require('mqtt');
 var baseDirectory = __dirname; // or whatever base directory you want
 
 var cam_image_path = '/qnap/Download/today'
+var cam_image_base_path = '/qnap/Download'
 var http_server_port = 9615
 
-var mqtt_broker = 'mqtt://apollo'
+var mqtt_broker = 'mqtt://apollo.fritz.box'
 const mqtt_client = mqtt.connect(mqtt_broker)
 
 mqtt_client.on('connect', () => {
@@ -61,7 +62,11 @@ watcher.on('create', function (file, stats) {
     console.log(file + ' was created')
     if (mqtt_client.connected === true) {
         console.log('mqtt: publish ' + file + ' to topic ' + 'cam/newImage')
-        mqtt_client.publish('cam/newImage', file);
+	var options={
+		retain:true,
+		qos:1
+	};
+        mqtt_client.publish('cam/newImage', file, options);
     }
 })
 
@@ -112,6 +117,55 @@ function getFileTimestampString(filename) {
         ("0" + d.getHours()).slice(-2) + ':' + ("0" + d.getMinutes()).slice(-2);
 }
 
+function get_html_thumbnail_view(thumbnail_path) {
+
+        var result = "";
+
+	console.log('thumbnail_path: ', thumbnail_path);
+            var filelist = fs.readdirSync(cam_image_base_path + thumbnail_path);
+
+            filelist.forEach(function (file, i) {
+                //console.log('File: %d: %s', i, file);
+                //console.log('indexOf = ' + file.indexOf('cam-20') );
+                if (file.indexOf('cam-20') != 0) {
+                    filelist.splice(i, 1);
+                    //console.log('splice ' + i + ' - ' + file )
+                }
+            });
+            filelist.sort(function (a, b) {
+                return a == b ? 0 : +(a > b) || -1;
+            });
+            result = '<html><head><title>Cam Images</title></head><body>' +
+                     '<style>' +
+                     '.wrapper { ' +
+                     '    display: grid; ' +
+                     '    grid-column-gap: 25px; grid-row-gap: 25px;' +
+                     '}' +
+                     '@media screen  { .wrapper { grid-template-columns: repeat(3, 1fr); } } ' +
+                     '@media screen and (max-width: 800px) { .wrapper { grid-template-columns: repeat(2, 1fr); } } ' +
+                     '@media screen and (max-width: 600px) { .wrapper { grid-template-columns: repeat(1, 1fr); } } ' +
+                     '.wrapper > div a img { max-width: 100%; }' +
+                     '</style>' +
+                     '<div class="row">' +
+                     '<div class="wrapper">';
+
+            filelist.forEach(file => {
+               result = result +'<div>' +
+                     '   <a href="' + thumbnail_path + '/' + file + '">' +
+                     '      <img src="' + thumbnail_path + '/' + file + '" />' +
+                     '   </a>' +
+                     '</div>';
+            });
+            result = result + '</div>' +
+                     '</div>' +
+                     '</body></html>';
+
+        return result;
+}
+
+
+
+
 http.createServer(function (request, response) {
     try {
         var requestUrl = url.parse(request.url);
@@ -127,6 +181,13 @@ http.createServer(function (request, response) {
         var index = getIndex(requestUrl.pathname);
         //if (requestUrl.pathname == "/latest" || requestUrl.pathname == "/latest.jpg") {
         //if (requestUrl.pathname.startsWith( "/latest" ) ) { // nodejs on RaspPi does not have startsWith
+
+	const myRe = /(\d\d\d\d)-(\d\d)-(\d\d)(.*)/g;
+	const regex_match = myRe.exec(requestUrl.pathname);
+	console.log('regex_match: ', regex_match);
+
+
+
         if (requestUrl.pathname.substring(0, "/latest".length) === "/latest") {
             fsPath = getLatest(index);
 
@@ -166,55 +227,36 @@ http.createServer(function (request, response) {
         } else if (requestUrl.pathname === "/") {
             // return html with thumbnails of all images in 'today' folder
             console.log("/all");
+
+
+
             response.writeHead(200);
 
-            var filelist = fs.readdirSync(cam_image_path);
 
-            filelist.forEach(function (file, i) {
-                //console.log('File: %d: %s', i, file);
-                //console.log('indexOf = ' + file.indexOf('cam-20') );
-                if (file.indexOf('cam-20') != 0) {
-                    filelist.splice(i, 1);
-                    //console.log('splice ' + i + ' - ' + file )
-                }
-            });
-            filelist.sort(function (a, b) {
-                return a == b ? 0 : +(a > b) || -1;
-            });
-            response.write('<html><head><title>Cam Images</title></head><body>');
+            html = get_html_thumbnail_view('/today');
+            console.log('html: ', html);
 
-            response.write('<style>');
-            response.write('.wrapper { ');
-            response.write('    display: grid; ');
-            response.write('    grid-column-gap: 25px; grid-row-gap: 25px;');
-            response.write('}');
-            response.write('@media screen  { .wrapper { grid-template-columns: repeat(3, 1fr); } } ');
-            response.write('@media screen and (max-width: 800px) { .wrapper { grid-template-columns: repeat(2, 1fr); } } ');
-            response.write('@media screen and (max-width: 600px) { .wrapper { grid-template-columns: repeat(1, 1fr); } } ');
-            response.write('.wrapper > div a img { max-width: 100%; }');
-            response.write('</style>');
-
-            response.write('<div class="row">');
-            response.write('<div class="wrapper">');
-            filelist.forEach(file => {
-                response.write('<div>');
-                response.write('   <a href="' + file + '">');
-                response.write('      <img src="' + file + '" />');
-                response.write('   </a>');
-                response.write('</div>');
-            });
-            response.write('</div>');
-            response.write('</div>');
-            response.write('</body></html>');
-
+            response.writeHead(200);
+            response.write(html);
             response.end();
+        } else if (regex_match && (regex_match.length<=4 || regex_match[4].length < 2) ) {
+
+	    console.log('REGEX match');
+            //var req_path = "2023-06-08";
+            var req_path = regex_match[1]+'-'+regex_match[2]+'-'+regex_match[3];
+            html = get_html_thumbnail_view('/' + req_path);
+            console.log('html: ', html);
+            response.writeHead(200);
+            response.write(html);
+            response.end();
+
         } else {
             console.log('request file');
 
             //console.log('fsPath = ' + fsPath );
             //console.log('cam_image_path = ' + cam_image_path);
             //console.log('requestUrl.pathname = ' + requestUrl.pathname );
-            fsPath = cam_image_path + requestUrl.pathname;
+            fsPath = cam_image_base_path + requestUrl.pathname;
 
             var fileStream = fs.createReadStream(fsPath);
             fileStream.pipe(response);
