@@ -156,8 +156,16 @@ function get_html_thumbnail_view(thumbnail_path) {
                      '   </a>' +
                      '</div>';
             });
+	    // get timestamp 'yesterday'
+	    var d = new Date();
+	    d.setDate(d.getDate() - 1);
+            var ts = '' + d.getFullYear() + '-' + ("0" + (d.getMonth() + 1)).slice(-2) + '-' + ("0" + d.getDate()).slice(-2);
+	    console.log('yesterday timestamp: ' + ts);
+	    
             result = result + '</div>' +
                      '</div>' +
+		     '<br><br>' +
+		     '<a href="/' + ts + '">' + ts + '</a>' +
                      '</body></html>';
 
         return result;
@@ -234,7 +242,7 @@ http.createServer(function (request, response) {
 
 
             html = get_html_thumbnail_view('/today');
-            console.log('html: ', html);
+            //console.log('html: ', html);
 
             response.writeHead(200);
             response.write(html);
@@ -245,7 +253,7 @@ http.createServer(function (request, response) {
             //var req_path = "2023-06-08";
             var req_path = regex_match[1]+'-'+regex_match[2]+'-'+regex_match[3];
             html = get_html_thumbnail_view('/' + req_path);
-            console.log('html: ', html);
+            //console.log('html: ', html);
             response.writeHead(200);
             response.write(html);
             response.end();
