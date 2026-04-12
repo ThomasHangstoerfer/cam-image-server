@@ -1,0 +1,14 @@
+[Unit]
+Description=alle Überwachungs-Bilder des letzten Tages in ein Verzeichnis verschieben
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=doorcam
+WorkingDirectory=/share/Download/
+ExecStart=/share/Download/cam-image-cleaner.sh
+Restart=OnFailure
+
+[Install]
+WantedBy=multi-user.target
