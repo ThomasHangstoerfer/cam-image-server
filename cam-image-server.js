@@ -33,12 +33,16 @@ const mqtt = require('mqtt');
 
 var baseDirectory = __dirname; // or whatever base directory you want
 
-var cam_image_path = '/qnap/Download/today'
-var cam_image_base_path = '/qnap/Download'
-var http_server_port = 9615
+var cam_image_path = '/qnap/Download/today';
+var cam_image_base_path = '/qnap/Download';
+var http_server_port = 9615;
 
-var mqtt_broker = 'mqtt://apollo.fritz.box'
-const mqtt_client = mqtt.connect(mqtt_broker)
+var mqtt_broker = 'mqtt://apollo.fritz.box';
+const mqtt_client = mqtt.connect(mqtt_broker);
+
+const file_prefix = 'CX410_00_20';
+
+console.log("Starting cam-image-server.js");
 
 mqtt_client.on('connect', () => {
     console.log('mqtt: Connected to mqtt-broker ' + mqtt_broker);
@@ -55,6 +59,8 @@ mqtt_client.on('message', (topic, message) => {
     }
 })
 
+
+console.log("Starting to watch for new files");
 
 // watch for new images and publish their filenames to mqtt-topic 'cam/newImage'
 watcher = hound.watch(cam_image_path)
@@ -93,7 +99,7 @@ function getLatest(index) {
     filelist.forEach(function (file, i) {
         //console.log('File: %d: %s', i, file);
         //console.log('indexOf = ' + file.indexOf('cam-20') );
-        if (file.indexOf('cam-20') != 0) {
+        if (file.indexOf(file_prefix) != 0) {
             filelist.splice(i, 1);
             //console.log('splice ' + i + ' - ' + file )
         }
@@ -126,11 +132,12 @@ function get_html_thumbnail_view(thumbnail_path) {
 
             filelist.forEach(function (file, i) {
                 //console.log('File: %d: %s', i, file);
-                //console.log('indexOf = ' + file.indexOf('cam-20') );
-                if (file.indexOf('cam-20') != 0) {
+                //console.log('indexOf = ' + file.indexOf(file_prefix) );
+                if (file.indexOf(file_prefix) != 0) {
                     filelist.splice(i, 1);
-                    //console.log('splice ' + i + ' - ' + file )
-                }
+                    //console.log('splice ' + i + ' - ' + file );
+		}
+                
             });
             filelist.sort(function (a, b) {
                 return a == b ? 0 : +(a > b) || -1;
@@ -173,11 +180,12 @@ function get_html_thumbnail_view(thumbnail_path) {
 
 
 
+console.log("Creating server");
 
 http.createServer(function (request, response) {
     try {
         var requestUrl = url.parse(request.url);
-        console.log("http-request: ", requestUrl);
+        console.log("\n--------\nhttp-request: ", requestUrl);
 
         // need to use path.normalize so people can't access directories underneath baseDirectory
         var fsPath = baseDirectory + path.normalize(requestUrl.pathname);

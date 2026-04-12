@@ -12,7 +12,7 @@
   "dependencies": {
     "hound": "^1.0.5",
     "jimp": "^0.2.28",
-    "mqtt": "^2.15.0"
+    "mqtt": "^2.18.9"
   },
   "devDependencies": {
     "babel": "^6.0.14"

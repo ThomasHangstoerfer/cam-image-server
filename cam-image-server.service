@@ -5,7 +5,7 @@ After=remote-fs.target
 
 [Service]
 #Type=notify
-ExecStartPre=/bin/sleep 30 ; /bin/systemctl start qnap-Download.mount ; /bin/systemctl start qnap-BTSync.mount ; /bin/systemctl start qnap-share.mount
+#ExecStartPre=/bin/sleep 30 ; /bin/systemctl start qnap-Download.mount ; /bin/systemctl start qnap-BTSync.mount ; /bin/systemctl start qnap-share.mount
 ExecStart=/usr/bin/node /opt/cam-image-server/cam-image-server.js
 
 [Install]
