@@ -64,6 +64,8 @@ elif [[ "$MODE" == "L" ]]; then
 	while true ; do 
 		FILE=`netcat -p $PORT -l`
 		echo "Received new filename: $FILE"
+		# wait 1 sec until the camera has written the file
+		#sleep 1
 		echo "Publish to cam/newImage"
 		mosquitto_pub -h ${MQTT_BROKER} -t "cam/newImage" -m "$FILE" -r
 	done
