@@ -33,8 +33,8 @@ const mqtt = require('mqtt');
 
 var baseDirectory = __dirname; // or whatever base directory you want
 
-var cam_image_path = '/qnap/Download/today';
-var cam_image_base_path = '/qnap/Download';
+var cam_image_path = '/share/Download/today';
+var cam_image_base_path = '/share/Download';
 var http_server_port = 9615;
 
 var mqtt_broker = 'mqtt://apollo.fritz.box';
@@ -244,15 +244,11 @@ http.createServer(function (request, response) {
             // return html with thumbnails of all images in 'today' folder
             console.log("/all");
 
-
-
             response.writeHead(200);
-
 
             html = get_html_thumbnail_view('/today');
-            //console.log('html: ', html);
 
-            response.writeHead(200);
+            //response.writeHead(200);
             response.write(html);
             response.end();
         } else if (regex_match && (regex_match.length<=4 || regex_match[4].length < 2) ) {
